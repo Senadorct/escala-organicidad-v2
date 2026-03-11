@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Escala de Organicidad · Dr. Morán</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      color: #1a202c;
+      min-height: 100vh;
+    }
+
+    /* ── LOGIN ── */
+    #login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .login-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px 36px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    }
+    .login-logo {
+      text-align: center;
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .login-logo h1 {
+      font-size: 1.5rem;
+      color: #1a56db;
+      font-weight: 700;
+    }
+    .login-logo p {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+    .aviso-medico {
+      background: #eff6ff;
+      border-left: 4px solid #1a56db;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 20px 0;
+      font-size: 0.82rem;
+      color: #1e40af;
+      line-height: 1.5;
+    }
+    .aviso-medico strong { display: block; margin-bottom: 4px; font-size: 0.85rem; }
+    .aviso-anonimo {
+      background: #f0fdf4;
+      border-left: 4px solid #16a34a;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      font-size: 0.81rem;
+      color: #166534;
+      line-height: 1.5;
+    }
+    .login-card label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+    .login-card input[type="email"] {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .login-card input[type="email"]:focus { border-color: #1a56db; }
+    .btn-primary {
+      width: 100%;
+      padding: 12px;
+      background: #1a56db;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 16px;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover { background: #1e429f; }
+    .btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
+    #login-error {
+      color: #dc2626;
+      font-size: 0.82rem;
+      margin-top: 10px;
+      text-align: center;
+      min-height: 18px;
+    }
+    .login-contact {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.78rem;
+      color: #9ca3af;
+    }
+    .login-contact a { color: #1a56db; text-decoration: none; }
+
+    /* ── APP ── */
+    #app-screen { display: none; }
+    .topbar {
+      background: #1a56db;
+      color: #fff;
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .topbar h1 { font-size: 1.05rem; font-weight: 700; }
+    .topbar span { font-size: 0.78rem; opacity: 0.85; }
+    .btn-logout {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.3); }
+
+    .container { max-width: 820px; margin: 0 auto; padding: 24px 16px 60px; }
+    .intro-box {
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+      border-left: 4px solid #1a56db;
+      font-size: 0.85rem;
+      color: #374151;
+      line-height: 1.6;
+    }
+
+    .section-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    }
+    .section-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #1a56db;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1.5px solid #e0e7ff;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .item-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .item-row:last-child { border-bottom: none; }
+    .item-row input[type="checkbox"] {
+      width: 18px; height: 18px;
+      margin-top: 2px; cursor: pointer; flex-shrink: 0;
+      accent-color: #1a56db;
+    }
+    .item-label { flex: 1; }
+    .item-label strong { display: block; font-size: 0.88rem; color: #111827; }
+    .item-label span { font-size: 0.78rem; color: #6b7280; line-height: 1.4; display: block; margin-top: 2px; }
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .badge-red { background: #fee2e2; color: #dc2626; }
+    .badge-orange { background: #ffedd5; color: #ea580c; }
+    .badge-green { background: #dcfce7; color: #16a34a; }
+
+    /* select items */
+    .item-select { margin-bottom: 12px; }
+    .item-select label { font-size: 0.88rem; font-weight: 600; color: #111827; display: block; margin-bottom: 6px; }
+    .item-select select {
+      width: 100%; padding: 9px 12px;
+      border: 1.5px solid #d1d5db; border-radius: 8px;
+      font-size: 0.88rem; background: #fff; outline: none;
+    }
+    .item-select select:focus { border-color: #1a56db; }
+    .item-select .hint { font-size: 0.77rem; color: #6b7280; margin-top: 4px; }
+
+    /* resultado */
+    #resultado {
+      background: #fff;
+      border-radius: 14px;
+      padding: 28px 24px;
+      margin-top: 20px;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      display: none;
+    }
+    #resultado h2 { font-size: 1.1rem; color: #374151; margin-bottom: 6px; }
+    #score-display {
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin: 12px 0 6px;
+    }
+    #interpretacion {
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 8px 20px;
+      border-radius: 20px;
+      display: inline-block;
+      margin-bottom: 14px;
+    }
+    #recomendacion {
+      font-size: 0.87rem;
+      color: #4b5563;
+      line-height: 1.6;
+      max-width: 520px;
+      margin: 0 auto 20px;
+    }
+    .btn-calcular {
+      background: #1a56db;
+      color: #fff;
+      border: none;
+      padding: 14px 40px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: block;
+      width: 100%;
+      margin-top: 20px;
+      transition: background 0.2s;
+    }
+    .btn-calcular:hover { background: #1e429f; }
+    .btn-reset {
+      background: #f3f4f6;
+      color: #374151;
+      border: none;
+      padding: 10px 30px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .btn-reset:hover { background: #e5e7eb; }
+    .disclaimer-footer {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin-top: 32px;
+      line-height: 1.6;
+    }
+    .disclaimer-footer a { color: #1a56db; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════ LOGIN ════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="logodrmoran.png" alt="Dr. Morán" style="max-height:80px; max-width:220px; object-fit:contain; margin-bottom:8px;" onerror="this.style.display='none'" />
+      <h1>🩺 Escala de Organicidad</h1>
+      <p>Dr. Morán · Digestivo Cartagena</p>
+    </div>
+
+    <div class="aviso-medico">
+      <strong>⚕️ Aplicación de uso médico exclusivo</strong>
+      Esta herramienta está diseñada para profesionales sanitarios como apoyo a la decisión clínica.
+      No está indicada para uso por parte de pacientes ni del público general.
+    </div>
+
+    <div class="aviso-anonimo">
+      🔒 <strong>Privacidad garantizada:</strong> Esta aplicación <strong>no registra ni almacena datos de pacientes</strong>.
+      Toda la información introducida es completamente anónima y se procesa únicamente en tu dispositivo.
+    </div>
+
+    <label for="email-input">Introduce tu correo para acceder</label>
+    <input type="email" id="email-input" placeholder="correo@ejemplo.com" />
+    <div id="login-error"></div>
+    <button class="btn-primary" id="btn-login" onclick="handleLogin()">Acceder</button>
+
+    <div class="login-contact">
+      ¿Problemas de acceso? Contacta con
+      <a href="mailto:digestivocartagena@yahoo.es">digestivocartagena@yahoo.es</a>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ APP ════════════════ -->
+<div id="app-screen">
+  <div class="topbar">
+    <div>
+      <img src="logodrmoran.png" alt="Dr. Morán" style="height:38px; object-fit:contain; filter:brightness(0) invert(1);" onerror="this.style.display='none'" />
+      <h1>🩺 Escala de Organicidad · Dolor Abdominal</h1>
+      <span id="user-email-display"></span>
+    </div>
+    <button class="btn-logout" onclick="handleLogout()">Cerrar sesión</button>
+  </div>
+
+  <div class="container">
+    <div class="intro-box">
+      Herramienta de apoyo a la decisión clínica para estimar el riesgo de <strong>patología orgánica</strong>
+      en pacientes con dolor abdominal de perfil funcional. Suma factores de riesgo (<em>alarm features</em>)
+      y resta puntos cuando el patrón es compatible con un trastorno de la interacción intestino–cerebro.
+      <strong>Úsela siempre integrada en la valoración clínica global.</strong>
+    </div>
+
+    <!-- BLOQUE 1: EDAD -->
+    <div class="section-card">
+      <div class="section-title">1. Edad</div>
+      <div class="item-select">
+        <label>Edad / edad de inicio de los síntomas</label>
+        <select id="edad">
+          <option value="0">— Seleccionar —</option>
+          <option value="0">Menor de 40 años (0 puntos)</option>
+          <option value="1">40–50 años (+1 punto)</option>
+          <option value="2">Mayor de 50 años (+2 puntos)</option>
+        </select>
+        <div class="hint">Edad de inicio tardía aumenta probabilidad de organicidad.</div>
+      </div>
+    </div>
+
+    <!-- BLOQUE 2: PATRÓN DEL DOLOR -->
+    <div class="section-card">
+      <div class="section-title">2. Patrón del dolor</div>
+      <div class="item-select">
+        <label>Tipo de patrón</label>
+        <select id="patron-dolor">
+          <option value="0">— Seleccionar —</option>
+          <option value="0">Intermitente, relacionado con comidas/estrés (0 puntos)</option>
+          <option value="1">Mixto / difícil de catalogar (+1 punto)</option>
+          <option value="2">Continuo y progresivo (+2 puntos)</option>
+        </select>
+        <div class="hint">Dolor continuo y progresivo orienta más a enfermedad orgánica.</div>
+      </div>
+      <div class="item-row">
+        <input type="checkbox" id="nocturno" value="2" />
+        <div class="item-label">
+          <strong>Síntomas nocturnos</strong>
+          <span>Despertares nocturnos por dolor — red flag relativa.</span>
+        </div>
+        <span class="badge badge-orange">+2</span>
+      </div>
+    </div>
+
+    <!-- BLOQUE 3: SÍNTOMAS DIGESTIVOS DE ALARMA -->
+    <div class="section-card">
+      <div class="section-title">3. Síntomas digestivos de alarma</div>
+      <div class="item-row">
+        <input type="checkbox" id="sangre" value="3" />
+        <div class="item-label">
+          <strong>Sangre en heces</strong>
+          <span>Hemorragia digestiva — aumenta claramente la sospecha de organicidad.</span>
+        </div>
+        <span class="badge badge-red">+3</span>
+      </div>
+      <div class="item-row">
+        <input type="checkbox" id="habito" value="2" />
+        <div class="item-label">
+          <strong>Alteración del hábito intestinal</strong>
+          <span>Diarrea nocturna / esteatorrea — obliga a descartar patología orgánica.</span>
+        </div>
+        <span class="badge badge-orange">+2</span>
+      </div>
+      <div class="item-row">
+        <input type="checkbox" id="vomitos" value="2" />
+        <div class="item-label">
+          <strong>Vómitos / disfagia persistentes</strong>
+          <span>Red flags formales — requieren estudio endoscópico.</span>
+        </div>
+        <span class="badge badge-orange">+2</span>
+      </div>
+    </div>
+
+    <!-- BLOQUE 4: SÍNTOMAS SISTÉMICOS -->
+    <div class="section-card">
+      <div class="section-title">4. Síntomas sistémicos</div>
+      <div class="item-row">
+        <input type="checkbox" id="peso" value="3" />
+        <div class="item-label">
+          <strong>Pérdida de peso involuntaria</strong>
+          <span>Signo mayor de alarma — estudio urgente.</span>
+        </div>
+        <span class="badge badge-red">+3</span>
+      </div>
+      <div class="item-row">
+        <input type="checkbox" id="fiebre" value="2" />
+        <div class="item-label">
+          <strong>Fiebre / sudoraciones nocturnas</strong>
+          <span>Cuadro constitucional — orienta a enfermedad inflamatoria o infecciosa.</span>
+        </div>
+        <span class="badge badge-orange">+2</span>
+      </div>
+    </div>
+
+    <!-- BLOQUE 5: ANTECEDENTES -->
+    <div class="section-card">
+      <div class="section-title">5. Antecedentes personales y familiares</div>
+      <div class="item-row">
+        <input type="checkbox" id="ap-gi" value="2" />
+        <div class="item-label">
+          <strong>AP personales digestivos relevantes</strong>
+          <span>EII, cirugía abdominal reciente, neoplasia previa.</span>
+        </div>
+        <span class="badge badge-orange">+2</span>
+      </div>
+      <div class="item-row">
+        <input type="checkbox" id="af" value="2" />
+        <div class="item-label">
+          <strong>AF de CCR / EII / neoplasia digestiva</strong>
+          <span>Familiares de primer grado con alto riesgo — estudio más agresivo justificado.</span>
+        </div>
+        <span class="badge badge-orange">+2</span>
+      </div>
+    </div>
+
+    <!-- BLOQUE 6: EXPLORACIÓN FÍSICA -->
+    <div class="section-card">
+      <div class="section-title">6. Exploración física</div>
+      <div class="item-row">
+        <input type="checkbox" id="abdomen" value="3" />
+        <div class="item-label">
+          <strong>Abdomen patológico</strong>
+          <span>Masa palpable, defensa, dolor a la descompresión — obliga a descartar orgánico.</span>
+        </div>
+        <span class="badge badge-red">+3</span>
+      </div>
+      <div class="item-row">
+        <input type="checkbox" id="otros-fisica" value="2" />
+        <div class="item-label">
+          <strong>Otros hallazgos físicos sistémicos</strong>
+          <span>Ictericia, adenopatías, hepatomegalia — refuerzan sospecha orgánica.</span>
+        </div>
+        <span class="badge badge-orange">+2</span>
+      </div>
+    </div>
+
+    <!-- BLOQUE 7: ANALÍTICA -->
+    <div class="section-card">
+      <div class="section-title">7. Analítica básica y heces</div>
+      <div class="item-row">
+        <input type="checkbox" id="hemograma" value="2" />
+        <div class="item-label">
+          <strong>Hemograma / bioquímica alterados</strong>
+          <span>Anemia, leucocitosis, PCR/VSG elevadas — signos de alerta analítica.</span>
+        </div>
+        <span class="badge badge-orange">+2</span>
+      </div>
+      <div class="item-row">
+        <input type="checkbox" id="calprotectina" value="3" />
+        <div class="item-label">
+          <strong>Calprotectina fecal elevada (&gt;150 µg/g)</strong>
+          <span>Eleva probabilidad de EII u otra patología orgánica.</span>
+        </div>
+        <span class="badge badge-red">+3</span>
+      </div>
+    </div>
+
+    <!-- BLOQUE 8: PERFIL FUNCIONAL (RESTA) -->
+    <div class="section-card">
+      <div class="section-title">8. Perfil funcional / psicosocial <span style="font-weight:400;color:#16a34a;font-size:0.8rem;">(resta puntos)</span></div>
+      <div class="item-row">
+        <input type="checkbox" id="cronicidad" value="-2" />
+        <div class="item-label">
+          <strong>Cronicidad estable con estudios previos negativos</strong>
+          <span>Síntomas &gt;6 meses sin cambio + estudios normales — favorece perfil funcional.</span>
+        </div>
+        <span class="badge badge-green">−2</span>
+      </div>
+      <div class="item-row">
+        <input type="checkbox" id="psicosocial" value="-2" />
+        <div class="item-label">
+          <strong>Alta carga psicosocial / múltiples síndromes funcionales</strong>
+          <span>Fibromialgia, fatiga crónica, cefalea tensional — asociados a dolor de origen central.</span>
+        </div>
+        <span class="badge badge-green">−2</span>
+      </div>
+      <div class="item-row">
+        <input type="checkbox" id="relacion-estres" value="-1" />
+        <div class="item-label">
+          <strong>Clara relación con estrés / eventos vitales</strong>
+          <span>Inicio o exacerbación coincide con factores psicosociales identificables.</span>
+        </div>
+        <span class="badge badge-green">−1</span>
+      </div>
+    </div>
+
+    <button class="btn-calcular" onclick="calcularScore()">Calcular puntuación</button>
+
+    <!-- RESULTADO -->
+    <div id="resultado">
+      <h2>Puntuación de organicidad</h2>
+      <div id="score-display"></div>
+      <div id="interpretacion"></div>
+      <div id="recomendacion"></div>
+      <button class="btn-reset" onclick="resetForm()">Nueva valoración</button>
+    </div>
+
+    <div class="disclaimer-footer">
+      Esta herramienta es un apoyo a la decisión clínica y no sustituye el juicio médico.<br/>
+      No almacena datos de pacientes. Uso exclusivo para profesionales sanitarios.<br/>
+      Contacto: <a href="mailto:digestivocartagena@yahoo.es">digestivocartagena@yahoo.es</a>
+    </div>
+  </div>
+</div>
+
+<script>
+   const SUPABASE_URL  = 'https://pkwegqggjcbausmcdjnz.supabase.co';
+   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrd2VncWdnamNiYXVzbWNkam56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNzg1NTQsImV4cCI6MjA4ODc1NDU1NH0.a3mxgQh7Rv--xHF5T-w9yghz6DAAeg_lUubRUoBT4x8';
+   const DEMO_PASS    = 'OrganicidadDemo2026!';
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── Comprobar sesión al cargar ──
+  window.addEventListener('DOMContentLoaded', async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) showApp(session.user.email);
+  });
+
+  // ── Login ──
+  async function handleLogin() {
+    const email = document.getElementById('email-input').value.trim();
+    const errEl = document.getElementById('login-error');
+    const btn   = document.getElementById('btn-login');
+    errEl.textContent = '';
+
+    if (!email || !email.includes('@')) {
+      errEl.textContent = 'Por favor, introduce un correo válido.';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Accediendo…';
+
+    try {
+      // Intentar login
+      let { error } = await sb.auth.signInWithPassword({ email, password: DEMO_PASS });
+
+      if (error && error.message.includes('Invalid login credentials')) {
+        // Primera vez — crear cuenta
+        const { error: signUpErr } = await sb.auth.signUp({ email, password: DEMO_PASS });
+        if (signUpErr) throw signUpErr;
+        // Login tras registro
+        const { error: err2 } = await sb.auth.signInWithPassword({ email, password: DEMO_PASS });
+        if (err2) throw err2;
+      } else if (error) {
+        throw error;
+      }
+
+      const { data: { session } } = await sb.auth.getSession();
+      showApp(session.user.email);
+
+    } catch (e) {
+      errEl.textContent = 'Error al acceder. Contacta con digestivocartagena@yahoo.es';
+      btn.disabled = false;
+      btn.textContent = 'Acceder';
+    }
+  }
+
+  function showApp(email) {
+    document.getElementById('login-screen').style.display  = 'none';
+    document.getElementById('app-screen').style.display    = 'block';
+    document.getElementById('user-email-display').textContent = email;
+  }
+
+  async function handleLogout() {
+    await sb.auth.signOut();
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display   = 'none';
+  }
+
+  // ── Permite Enter en el campo email ──
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('email-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleLogin();
+    });
+  });
+
+  // ── Cálculo de score ──
+  function calcularScore() {
+    let score = 0;
+
+    // Selects
+    score += parseInt(document.getElementById('edad').value) || 0;
+    score += parseInt(document.getElementById('patron-dolor').value) || 0;
+
+    // Checkboxes
+    const ids = ['nocturno','sangre','habito','vomitos','peso','fiebre',
+                 'ap-gi','af','abdomen','otros-fisica','hemograma','calprotectina',
+                 'cronicidad','psicosocial','relacion-estres'];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el.checked) score += parseInt(el.value);
+    });
+
+    const res = document.getElementById('resultado');
+    const scoreEl = document.getElementById('score-display');
+    const interpEl = document.getElementById('interpretacion');
+    const recomEl  = document.getElementById('recomendacion');
+
+    scoreEl.textContent = score + ' pts';
+
+    if (score <= 2) {
+      scoreEl.style.color = '#16a34a';
+      interpEl.style.background = '#dcfce7';
+      interpEl.style.color = '#166534';
+      interpEl.textContent = '🟢 Perfil funcional — baja sospecha orgánica';
+      recomEl.textContent = 'El patrón es compatible con un trastorno de la interacción intestino–cerebro (DGBI). Considerar criterios Roma IV, valoración psicosocial y manejo multidisciplinar sin extensión del estudio orgánico si no hay cambios clínicos.';
+    } else if (score <= 5) {
+      scoreEl.style.color = '#d97706';
+      interpEl.style.background = '#fef3c7';
+      interpEl.style.color = '#92400e';
+      interpEl.textContent = '🟡 Sospecha intermedia — valoración individualizada';
+      recomEl.textContent = 'Existen algunos factores de alerta que justifican completar el estudio dirigido. Individualizar según contexto clínico. Revisar analítica básica y calprotectina si no se han realizado. Seguimiento estrecho.';
+    } else {
+      scoreEl.style.color = '#dc2626';
+      interpEl.style.background = '#fee2e2';
+      interpEl.style.color = '#991b1b';
+      interpEl.textContent = '🔴 Alta sospecha orgánica — estudio prioritario';
+      recomEl.textContent = 'La presencia de múltiples factores de alarma obliga a completar estudio endoscópico y/o de imagen de forma prioritaria. No demorar la evaluación. Derivar a consulta especializada si no se dispone de recursos diagnósticos inmediatos.';
+    }
+
+    res.style.display = 'block';
+    res.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function resetForm() {
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.querySelectorAll('select').forEach(sel => sel.selectedIndex = 0);
+    document.getElementById('resultado').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
